@@ -6,6 +6,7 @@ const flash = require('connect-flash');
 const bodyParser = require('body-parser');
 const keys = require('./config/keys');
 const app = express();
+const proxy = require('./routes/proxy')();
 
 require('./models/User');
 require('./models/Survey');
@@ -28,18 +29,21 @@ require('./routes/authRoutes')(app);
 require('./routes/billingRoutes')(app);
 require('./routes/surveyRoutes')(app);
 require('./routes/accountRoutes')(app);
+require('./routes/shinyRoutes')(app);
 
 mongoose.connect(keys.mongodbConnectionString, { useNewUrlParser: true });
 
-if(process.env.NODE_ENV === 'production') {
+//if(process.env.NODE_ENV === 'production') {
     app.use(express.static('client/build'));
 
     const path = require('path');
     app.get('*', (req, res) => {
         res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-    });
-}
-
+       });
+//}
 
 const PORT = process.env.PORT || 5001; 
-app.listen(PORT);
+const server = app.listen(PORT);
+server.on('upgrade', function (req, socket, head) {
+    proxy.ws(req, socket, head);
+  });
