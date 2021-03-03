@@ -6,7 +6,6 @@ const keys = require('../config/keys');
 const bcrypt = require('bcrypt');
 const axios = require('axios');
 
-const { registerTrackingKey } = require('../routes/utils');
 
 const { accountManagementServerURI } = require('../config/keys');
 
@@ -52,13 +51,11 @@ passport.use(
       const existingUser = await User.findOne({ googleId: profile.id });
 
       if (existingUser) {
-        await registerTrackingKey(existingUser.id);
         return done(null, existingUser);
       }
 
       const user = await new User({ googleId: profile.id }).save();
       await createTrackingAccount(user.id, null);
-      await registerTrackingKey(user.id);
 
       done(null, user);
     }
@@ -83,7 +80,6 @@ passport.use(
         }
         // return user
         console.log('return user');
-        await registerTrackingKey(existingUser.id);  
         return done(null, existingUser);
       }
       
@@ -112,7 +108,6 @@ async (req, email, password, done) => {
   });
   
   await createTrackingAccount(newUser.id, null);
-  await registerTrackingKey(newUser.id);  
 
   // save the user_id to the req.user property
   return done(null, newUser);

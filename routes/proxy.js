@@ -5,31 +5,40 @@ const { getTrackingKey } = require('./utils');
 const proxy = httpProxy.createProxyServer({
     target: {
         host: keys.shinyHost,
-        port: keys.shinyPort
+        port: keys.shinyPort,
+        protocol: 'http'
       },
-    //prependPath: false,
-    //ignorePath: true,
-    //changeOrigin: true,
-    //ws: true,
-    //protocolRewrite: 'http',
-    //target: 'http://info.cern.ch/'
+    changeOrigin: true,
+    prependPath: false,
+    auth: 'test:test123'
 });
 
-proxy.on('error', function(e) {
-    console.log('Error connecting');
-    console.log(e);
-});
-
-const setIfExists = function(proxyReq, header, value){
+function setIfExists(proxyReq, header, value){
     if(value){
         proxyReq.setHeader(header, encodeURIComponent(value));
     }
 }
+
+proxy.on('error', () => {
+    console.log('Error connecting');
+    console.log(e);
+});
   
-proxy.on('proxyReq', function(proxyReq, req, res, options) {
-    setIfExists(proxyReq, 'x-ta-key', getTrackingKey(req.user._id));
+proxy.on('proxyReq', async (proxyReq, req, res, options) => {
+    /* if (req.user && req.user._id) {
+        const { account } = await getUserDetails(req.user._id);
+        setIfExists(proxyReq, 'x-ta-key', account);
+    } */
 });
 
+proxy.on('proxyRes', (proxyRes, req, res) => {
+    if (proxyRes.headers['x-ta-key'])
+        delete proxyRes.headers['x-ta-key'];
+});
+
+proxy.on('proxyReqWs', (proxyReq, req, socket, options, head) => {
+    //setIfExists(proxyReq, 'x-ta-key', getTrackingKey(req.user._id));
+});
 
 module.exports = () => {
     return proxy;

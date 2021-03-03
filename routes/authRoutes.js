@@ -1,4 +1,7 @@
 const passport = require('passport');
+const _ = require('lodash');
+const { encrypt } = require('./crypto');
+const { getUserDetails } = require('./utils');
 
 module.exports = (app) => {
     app.get('/auth/google', passport.authenticate('google', {
@@ -18,8 +21,18 @@ module.exports = (app) => {
         res.redirect('/');
     });
 
-    app.get('/api/current_user', (req, res) => {
-        res.send(req.user);
+    app.get('/api/current_user', async (req, res) => {
+        if (req.user && req.user._id) {
+            const { account } = await getUserDetails(req.user._id);
+            const encryptedData = encrypt(account);
+            let userWithShinyKey = { shinyKey: {
+                key: encryptedData.content,
+                iv: encryptedData.iv
+            }}
+            _.merge(userWithShinyKey, req.user);
+            return res.send(userWithShinyKey);
+        }
+        res.send();
     });
 
     app.post('/auth/signup', passport.authenticate('local-signup', {

@@ -6,15 +6,7 @@ const getUserDetails = async (userId) => {
     return data;
 }
 
-const trackingKeyRegister = { };
 
 module.exports = {
-    registerTrackingKey: async (userId) => {
-        const { account } = await getUserDetails(userId);
-        trackingKeyRegister[userId] = account;
-    },
-    getTrackingKey: (userId) => {
-        return trackingKeyRegister[userId];
-    },
     getUserDetails
 }
