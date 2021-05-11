@@ -3,9 +3,10 @@ const _ = require('lodash');
 const { encrypt } = require('./crypto');
 const { getUserDetails } = require('./utils');
 const requireLogin = require('../middlewares/requireLogin');
+const requireBearerAuthentication = require('../middlewares/requireBearerAuthentication');
+const requireClientAuthentication = require('../middlewares/requireClientAuthentication');
 const oauth2Service = require('../services/oauth2.js');
-
-const server = oauth2Service.getOAuthServer();
+const keys = require('../config/keys');
 
 module.exports = (app) => {
     app.get('/auth/google', passport.authenticate('google', {
@@ -83,50 +84,35 @@ module.exports = (app) => {
         }
     ));
 
-    app.post('/api/client', /*requireLogin,*/ (req, res) => {
-        var client = new Client();  // Set the client properties that came from the POST data
-        client.name = req.body.name;
-        client.id = req.body.id;
-        client.secret = req.body.secret;
-        client.userId = req.user._id;  // Save the client and check for errors
-        client.save(
-            function(err) {
-                if (err)
-                    res.send(err);   
-                res.json({ message: 'Client added to the locker!', data: client });
-            }
-        );
-    });
 
-    app.get('/api/client', /*requireLogin,*/ (req, res) => {
-        Client.find({ userId: req.user._id }, function(err, clients) {
-            if (err)
-              res.send(err);    
-            
-            res.json(clients);
-          });
-    });
+    app.get('/api/oauth2/authorize', requireLogin, async (req, res) => {
+        const { response_type, client_id, redirect_uri, scope, state, nonce} = req.query;
 
-    app.get('/api/oauth2/authorize', requireLogin, (req, res) => {
-        server.authorization(
-            function(clientId, redirectUri, callback) {
-                Client.findOne({ id: clientId }, function (err, client) {
-                    if (err) { return callback(err); }     
-                    return callback(null, client, redirectUri);
-                });
-        });
-        function (req, res){
-          res.render('dialog', { transactionID: req.oauth2.transactionID, user: req.user, client: req.oauth2.client });
+        if (client_id !== keys.client_id) {
+            res.status(404).end('Client ID not found!');
+            return;
         }
+        if (response_type !== 'code') {
+            res.status(404).end('Response Type not found!');
+            return;
+        }
+
+        const code = await oauth2Service.createNewCode(client_id, redirect_uri, req.user._id);
+        res.redirect(`${redirect_uri}?code=${code.value}&state=${state}`);
     });
 
-    app.post('/api/oauth2/authorize', requireLogin, server.decision); // , server.errorHandler
+    app.post('/api/oauth2/token', requireClientAuthentication, async (req, res) => {
+        const responseObject = await oauth2Service.exchangeCodeForToken(req.body.code, req.user.client_id); //req.user._id
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(responseObject));
+    });
 
-    app.post('/api/oauth2/token', requiereBearerAuthentication, server.decision, server.errorHandler);
-
-    app.get('/api/userinfo', 
-  passport.authenticate('bearer', { session: false }),
-  function(req, res) {
-    res.json(req.user);
-  });
+    app.get('/api/userinfo', requireBearerAuthentication, (req, res) => {
+        const responseObject = {
+            'username': 'Martin Limberger',
+            'email': 'martin.limberger@gmx.net'
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(responseObject));
+    });
 }

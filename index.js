@@ -12,6 +12,8 @@ const proxy = require('./routes/supersetProxy')();
 const { initTrackDBConnections } = require('./services/trackAnythingDB');
 
 require('./models/User');
+require('./models/Token');
+require('./models/Code');
 require('./models/Survey');
 require('./services/passport');
 

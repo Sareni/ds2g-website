@@ -1,9 +1,7 @@
-const oauth2orize = require('oauth2orize')
-const User = require('../models/User');
-const Client = require('../models/Client');
-const Token = require('../models/Token');
-const Code = require('../models/Code');
+const mongoose = require('mongoose');
 
+const Token = mongoose.model('tokens');
+const Code = mongoose.model('codes');
 
 function uid (len) {
     var buf = []
@@ -17,57 +15,40 @@ function uid (len) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-const server = oauth2orize.createServer();
-
-// Register serialialization function
-server.serializeClient(function(client, callback) {
-    return callback(null, client._id);
-  });
-  
-// Register deserialization function
-server.deserializeClient(function(id, callback) {
-    Client.findOne({ _id: id }, function (err, client) {
-        if (err) { return callback(err); }
-        return callback(null, client);
-    });
-});
-
-// Register authorization code grant type
-server.grant(oauth2orize.grant.code(function(client, redirectUri, user, ares, callback) {
-    // Create a new authorization code
-    var code = new Code({
+  async function createNewCode(clientId, redirectUri, userId) {
+    return new Code({
       value: uid(16),
-      clientId: client._id,
-      redirectUri: redirectUri,
-      userId: user._id
-    });  // Save the auth code and check for errors
-    code.save(function(err) {
-      if (err) { return callback(err); }    callback(null, code.value);
-    });
-  }));
+      clientId,
+      redirectUri,
+      userId
+    }).save();
+  }
 
-  server.exchange(oauth2orize.exchange.code(function(client, code, redirectUri, callback) {
-    Code.findOne({ value: code }, function (err, authCode) {
-      if (err) { return callback(err); }
-      if (authCode === undefined) { return callback(null, false); }
-      if (client._id.toString() !== authCode.clientId) { return callback(null, false); }
-      if (redirectUri !== authCode.redirectUri) { return callback(null, false); }    // Delete auth code now that it has been used
-      authCode.remove(function (err) {
-        if(err) { return callback(err); }      // Create a new access token
-        var token = new Token({
-          value: uid(256),
-          clientId: authCode.clientId,
-          userId: authCode.userId
-        });      // Save the access token and check for errors
-        token.save(function (err) {
-          if (err) { return callback(err); }        callback(null, token);
-        });
-      });
-    });
-  }));
+  async function exchangeCodeForToken(codeValue, clientId, userId) {
+    const code = await Code.findOne({ value: codeValue })
+    code.remove();
 
-exports = {
-    getOAuthServer: () => {
-        return server;
+    const token = await new Token({
+        value: uid(256),
+        clientId,
+        userId
+    }).save();
+
+    // auth0-style
+    return {
+        'access_token': token.value,
+        'refresh_token': '',
+        'id_token': '',
+        'token_type': 'Bearer',
+        'expires_in': 86400
     }
+  }
+
+  
+
+          
+
+module.exports = {
+  createNewCode,
+  exchangeCodeForToken,
 }

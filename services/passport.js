@@ -1,13 +1,14 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const LocalStrategy = require('passport-local').Strategy;
+const BasicStrategy = require('passport-http').BasicStrategy;
 const mongoose = require('mongoose');
 const keys = require('../config/keys');
 const bcrypt = require('bcrypt');
 const axios = require('axios');
 const Auth0Stragegy = require('passport-auth0');
 const BearerStrategy = require('passport-http-bearer').Strategy
-const Token = require('../models/Token');
+const Token = mongoose.model('tokens');
 
 const { addTrackDBViewForNewUser } = require('./trackAnythingDB');
 const { accountManagementServerURI } = require('../config/keys');
@@ -151,16 +152,22 @@ async (req, email, password, done) => {
 ));
 
 passport.use(new BearerStrategy(
-  function(accessToken, callback) {
-    Token.findOne({value: accessToken }, function (err, token) {
-      if (err) { return callback(err); }      // No token found
-      if (!token) { return callback(null, false); }      User.findOne({ _id: token.userId }, function (err, user) {
-        if (err) { return callback(err); }        // No user found
-        if (!user) { return callback(null, false); }        // Simple example with no scope
-        callback(null, user, { scope: '*' });
-      });
-    });
+  async function(accessToken, callback) {
+    const token = await Token.findOne({value: accessToken });
+    if (!token) {
+      return callback(null, false);
+    }
+    return callback(null, {}, { scope: '*' }); // TODO
   }
 ));
 
+passport.use('client-basic', new BasicStrategy(
+  function(username, password, callback) {
+    if (username !== keys.client_id || password !== keys.client_secret) {
+      return callback(null, false);
+    }
+
+    return callback(null, {client_id: keys.client_id, client_secret: keys.client_secret}); // !!!!????
+  }
+));
 
