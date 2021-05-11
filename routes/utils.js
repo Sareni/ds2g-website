@@ -2,8 +2,13 @@ const axios = require('axios');
 const { accountManagementServerURI } = require('../config/keys');
 
 const getUserDetails = async (userId) => {
-    const { data } = await axios.get(`${accountManagementServerURI}/getAccount/${userId}`);
-    return data;
+    try {
+        const { data } = await axios.get(`${accountManagementServerURI}/getAccount/${userId}`);
+        return data;
+    } catch (e) {
+        return {account: '', plan: ''}
+    }
+    
 }
 
 

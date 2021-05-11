@@ -1,6 +1,6 @@
 
 const requireLogin = require('../middlewares/requireLogin');
-const proxy = require('./proxy')();
+const proxy = require('./shinyProxy')();
 
 
 module.exports = (app) => {

@@ -53,7 +53,7 @@ class Header extends Component {
         }
     }
 
-    render() {
+    render() { // <i className="material-icons left">data_usage</i> track-anything
         return (
             <nav className='blue-grey'>
                 <div className='nav-wrapper container'>
@@ -61,8 +61,8 @@ class Header extends Component {
                             to={ this.props.auth ? '/dashboard' : '/' }
                             className='left brand-logo'
                         >
-                            <i className="material-icons left">data_usage</i>
-                            track-anything
+                            
+                            DS2G - Data Platform
                         </Link>
                     <ul className='right'>
                         { this.renderContent() }

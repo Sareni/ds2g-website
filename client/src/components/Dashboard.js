@@ -6,14 +6,10 @@ import SurveyList from './surveys/SurveyList';
 const Dashboard = () => {
     return (
         <div>
-            <SurveyList />
-            <div className="center-align"> 
-                <Link to="/surveys/new" className="btn-floating btn-large red">
-                    <i className="material-icons white blue-grey-text">add</i>
-                </Link>
-            </div>
+            <iframe src={ `/api/reports`} style={{ width: '100%', height: 'calc(100vh - 80px)', padding: '5px 0' }} frameBorder="0" />
         </div>
     );
 }
 
 export default Dashboard;
+// height: '26px', padding: '1px', border: 'none', float: 'right', backgroundColor: 'lightgrey'

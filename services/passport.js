@@ -5,9 +5,13 @@ const mongoose = require('mongoose');
 const keys = require('../config/keys');
 const bcrypt = require('bcrypt');
 const axios = require('axios');
+const Auth0Stragegy = require('passport-auth0');
+const BearerStrategy = require('passport-http-bearer').Strategy
+const Token = require('../models/Token');
 
-
+const { addTrackDBViewForNewUser } = require('./trackAnythingDB');
 const { accountManagementServerURI } = require('../config/keys');
+const { initUserInSuperset } = require('./superset');
 
 // TODO: passport-local-mongoose
 
@@ -15,10 +19,17 @@ const User = mongoose.model('users');
 
 
 async function createTrackingAccount(userId, plan) {
-  await axios.post(`${accountManagementServerURI}/createAccount`, {
+  const res= await axios.post(`${accountManagementServerURI}/createAccount`, {
     userId,
     plan
   });
+  return res.data;
+}
+
+
+async function createSupersetAccount(accountKey) {
+  await addTrackDBViewForNewUser(accountKey);
+  await initUserInSuperset(accountKey)
 }
 
 /* passport.serializeUser((user, done) => {
@@ -40,6 +51,29 @@ passport.deserializeUser((obj, done) => {
 });
 
 passport.use(
+  new Auth0Stragegy({
+      domain: keys.AUTH0_DOMAIN,
+      clientID: keys.AUTH0_CLIENT_ID,
+      clientSecret: keys.AUTH0_CLIENT_SECRET,
+      callbackURL: '/auth/auth0/callback'
+    },
+    async (accessToken, refreshToken, extraParams, profile, done) => {
+      const existingUser = await User.findOne({ username: profile.username });
+
+      if (existingUser) {
+        return done(null, existingUser);
+      }
+
+      const user = await new User({ username: profile.username }).save();
+      // const trackingAccount = await createTrackingAccount(user.id, null);
+      // createSupersetAccount(trackingAccount.account);
+
+      done(null, user);
+    }
+  )
+);
+
+passport.use(
   new GoogleStrategy(
     {
       clientID: keys.googleClientID,
@@ -55,7 +89,8 @@ passport.use(
       }
 
       const user = await new User({ googleId: profile.id }).save();
-      await createTrackingAccount(user.id, null);
+      const trackingAccount = await createTrackingAccount(user.id, null);
+      createSupersetAccount(trackingAccount.account);
 
       done(null, user);
     }
@@ -107,9 +142,25 @@ async (req, email, password, done) => {
     //phone: req.body.phone
   });
   
-  await createTrackingAccount(newUser.id, null);
+  const trackingAccount = await createTrackingAccount(newUser.id, null);
+  createSupersetAccount(trackingAccount.account);
 
   // save the user_id to the req.user property
   return done(null, newUser);
 }
 ));
+
+passport.use(new BearerStrategy(
+  function(accessToken, callback) {
+    Token.findOne({value: accessToken }, function (err, token) {
+      if (err) { return callback(err); }      // No token found
+      if (!token) { return callback(null, false); }      User.findOne({ _id: token.userId }, function (err, user) {
+        if (err) { return callback(err); }        // No user found
+        if (!user) { return callback(null, false); }        // Simple example with no scope
+        callback(null, user, { scope: '*' });
+      });
+    });
+  }
+));
+
+
