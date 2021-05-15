@@ -22,9 +22,13 @@ proxy.on('error', () => {
     console.log(e);
 });
   
-proxy.on('proxyReq', async (proxyReq, req, res, options) => { });
+proxy.on('proxyReq', async (proxyReq, req, res, options) => { 
+    console.log('proxyReq', proxyReq);
+});
 
-proxy.on('proxyRes', (proxyRes, req, res) => { });
+proxy.on('proxyRes', (proxyRes, req, res) => {
+    console.log('proxyRes', proxyRes);
+});
 
 proxy.on('proxyReqWs', (proxyReq, req, socket, options, head) => { });
 

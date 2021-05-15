@@ -24,14 +24,14 @@ function uid (len) {
     }).save();
   }
 
-  async function exchangeCodeForToken(codeValue, clientId, userId) {
+  async function exchangeCodeForToken(codeValue, clientId) {
     const code = await Code.findOne({ value: codeValue })
     code.remove();
 
     const token = await new Token({
         value: uid(256),
         clientId,
-        userId
+        userId: code.userId // TODO: probably insecure
     }).save();
 
     // auth0-style

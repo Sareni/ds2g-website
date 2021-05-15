@@ -157,7 +157,7 @@ passport.use(new BearerStrategy(
     if (!token) {
       return callback(null, false);
     }
-    return callback(null, {}, { scope: '*' }); // TODO
+    return callback(null, {userId: token.userId}, { scope: '*' }); // TODO
   }
 ));
 

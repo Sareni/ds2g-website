@@ -6,7 +6,7 @@ import SurveyList from './surveys/SurveyList';
 const Dashboard = () => {
     return (
         <div>
-            <iframe src={ `/api/reports`} style={{ width: '100%', height: 'calc(100vh - 80px)', padding: '5px 0' }} frameBorder="0" />
+            <iframe src={`http://superset.zenpa.at:80/login/ownauth`} style={{ width: '100%', height: 'calc(100vh - 80px)', padding: '5px 0' }} frameBorder="0" />
         </div>
     );
 }

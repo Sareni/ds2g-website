@@ -1,4 +1,5 @@
 const passport = require('passport');
+const mongoose = require('mongoose');
 const _ = require('lodash');
 const { encrypt } = require('./crypto');
 const { getUserDetails } = require('./utils');
@@ -7,6 +8,8 @@ const requireBearerAuthentication = require('../middlewares/requireBearerAuthent
 const requireClientAuthentication = require('../middlewares/requireClientAuthentication');
 const oauth2Service = require('../services/oauth2.js');
 const keys = require('../config/keys');
+const { accountKeyToName } = require('../services/superset');
+const User = mongoose.model('users');
 
 module.exports = (app) => {
     app.get('/auth/google', passport.authenticate('google', {
@@ -102,15 +105,23 @@ module.exports = (app) => {
     });
 
     app.post('/api/oauth2/token', requireClientAuthentication, async (req, res) => {
-        const responseObject = await oauth2Service.exchangeCodeForToken(req.body.code, req.user.client_id); //req.user._id
+        const responseObject = await oauth2Service.exchangeCodeForToken(req.body.code, req.user.client_id);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(responseObject));
     });
 
-    app.get('/api/userinfo', requireBearerAuthentication, (req, res) => {
+    app.get('/api/userinfo', requireBearerAuthentication, async (req, res) => {
+        const user = await User.findOne({_id: req.user.userId});
+        if(!user) {
+            res.status(404).end('User not found!');
+            return;
+        }
+
+        const { account } = await getUserDetails(req.user.userId);
+
         const responseObject = {
-            'username': 'Martin Limberger',
-            'email': 'martin.limberger@gmx.net'
+            'username': accountKeyToName(account),
+            'email': accountKeyToName(account)
         }
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(responseObject));
