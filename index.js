@@ -1,21 +1,9 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cookieSession = require('cookie-session');
 const passport = require('passport');
-const flash = require('connect-flash');
 const bodyParser = require('body-parser');
 const keys = require('./config/keys');
 const app = express();
-// const proxy = require('./routes/shinyProxy')();
-const proxy = require('./routes/supersetProxy')();
-
-const { initTrackDBConnections } = require('./services/trackAnythingDB');
-
-require('./models/User');
-require('./models/Token');
-require('./models/Code');
-require('./models/Survey');
-require('./services/passport');
 
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
@@ -37,16 +25,9 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session()); // sess
-app.use(flash());
 
 require('./routes/authRoutes')(app);
-require('./routes/billingRoutes')(app);
-require('./routes/surveyRoutes')(app);
-require('./routes/accountRoutes')(app);
-require('./routes/supersetRoutes')(app);
 
-mongoose.connect(keys.mongodbConnectionString, { useNewUrlParser: true });
-initTrackDBConnections();
 
 //if(process.env.NODE_ENV === 'production') {
     app.use(express.static('client/build'));
@@ -57,10 +38,5 @@ initTrackDBConnections();
        });
 //}
 
-
-
-const PORT = process.env.PORT || 5001; 
+const PORT = process.env.PORT || 5002; 
 const server = app.listen(PORT);
-server.on('upgrade', function (req, socket, head) {
-    proxy.ws(req, socket, head);
-  });

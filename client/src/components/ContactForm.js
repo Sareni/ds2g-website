@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const SupportForm = () => {
+const ContactForm = () => {
     return (
         <div class="container" style={{ textAlign: 'center' }}>
             <h1>
@@ -43,4 +43,4 @@ const SupportForm = () => {
     );
 };
 
-export default SupportForm;
+export default ContactForm;

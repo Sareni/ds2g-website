@@ -1,7 +1,7 @@
 import React from 'react';
 import testImg from './test.jpg';
 
-const ProjectCard = () => {
+const ShowroomCard = () => {
     return (
         <div class="col s12 m6 l4">
             <div class="card">
@@ -21,4 +21,4 @@ const ProjectCard = () => {
     );
 };
 
-export default ProjectCard;
+export default ShowroomCard;
