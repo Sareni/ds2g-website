@@ -62,7 +62,7 @@ class Header extends Component {
                             className='left brand-logo'
                         >
                             
-                            DS2G - Data Platform
+                            DS2G - Data Science to go
                         </Link>
                     <ul className='right'>
                         { this.renderContent() }
