@@ -10,8 +10,11 @@ class Header extends Component {
 
     renderContent() {
         return [
-            <li><Link className='grey-text' to="/showroom">Showroom</Link></li>,
-            <li><Link className='grey-text' to="/contact">Kontakt</Link></li>,
+            <li><Link className='blue-grey-text' to="/showroom">Showroom</Link></li>,
+            <li><Link className='blue-grey-text' to="/contact">Kontakt</Link></li>,
+            <li><div style={{ width: '50px', height: '1px' }}></div></li>,
+            <li><Link className='blue-grey-text' to="/signup">Registrieren</Link></li>,
+            <li><Link className='blue-grey-text' to="/login">Login</Link></li>
         ];
 
     }
@@ -24,7 +27,10 @@ class Header extends Component {
                             to="/"
                             className='left' // brand-logo
                         >
-                            <div className='grey-text' style={{lineHeight: '18px', paddingBottom: '8px'}}><span style={{fontSize: '28px', lineHeight: '38px'}}>DS2G</span><br />Data Science to go</div>
+                            <div className='blue-grey-text' style={{lineHeight: '18px', paddingBottom: '8px'}}>
+                                <span style={{fontSize: '28px', lineHeight: '38px', letterSpacing: '19px'}}>DS2G</span><br />
+                                Data Science to go
+                            </div>
                         </Link>
                     <ul className='right'>
                         { this.renderContent() }

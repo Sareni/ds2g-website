@@ -5,7 +5,7 @@ const Showroom = () => {
     return (
         <div style={{ textAlign: 'center' }}>
             <h1>
-            Projects
+            Showroom
             </h1>
             <div class="row">
                 <ShowroomCard />

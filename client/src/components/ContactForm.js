@@ -5,8 +5,14 @@ const ContactForm = () => {
     return (
         <div class="container" style={{ textAlign: 'center' }}>
             <h1>
-            Support!
+            Kontakt
             </h1>
+            <div class="row">
+                Hier findest du alle Kontaktm&ouml;glichkeiten.
+            </div>
+            <h4 style={{ marginTop: '100px'}}>
+                Kontaktformular
+            </h4>
             <div class="row">
                 <form class="col s12" id="reg-form">
                     <div class="row">
